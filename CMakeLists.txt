@@ -141,3 +141,18 @@ include_directories(include)
 #   # myfile2
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
+
+#############
+## Testing ##
+#############
+
+## Add gtest based cpp test target and link libraries
+catkin_add_gtest(${PROJECT_NAME}-test test/test_gpr.cpp WORKING_DIRECTORY ${PROJECT_SOURCE_DIR/test/data})
+if(TARGET ${PROJECT_NAME}-test)
+#  target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+endif()
+
+## Add folders to be run by python nosetests
+# catkin_add_nosetests(test)
+# export inofrmation for autocompletion tools 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
