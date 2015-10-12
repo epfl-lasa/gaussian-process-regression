@@ -45,6 +45,8 @@ typename GaussianProcessRegression<R>::VectorXr GaussianProcessRegression<R>::SQ
   return KXx;
 }
 
+
+// This is the right way to do it but this code should be refactored and tweaked so that the decompositon is not recomputed unless new training data has arrived. 
 template <typename R>
 typename GaussianProcessRegression<R>::VectorXr GaussianProcessRegression<R>::DoRegression2(const VectorXr& inp,bool prepare){
   VectorXr outp(output_data_.rows());
@@ -66,15 +68,10 @@ typename GaussianProcessRegression<R>::VectorXr GaussianProcessRegression<R>::Do
   Eigen::FullPivLU<MatrixXr> decomposition(KXX_);
   for (size_t i=0; i < output_data_.rows(); ++i)
     {
-      alpha.row(i) = (decomposition.solve(output_data_.row(0).transpose())).transpose();
+      alpha.row(i) = (decomposition.solve(output_data_.row(i).transpose())).transpose();
       outp(i) = (alpha.row(i)*KXx)(0);
     }
-  // std::cout<<output_data_.rows()<<" "<<output_data_.cols()<<std::endl;
-  // std::cout<<alpha.rows()<<" "<<alpha.cols()<<std::endl;
-  // std::cout<<KXx.rows()<<" "<<KXx.cols()<<std::endl;
-  // auto temp = alpha*KXx;
-  // //std::cout<<temp.rows()<<" "<<temp.cols()<<std::endl;
-  // outp = temp.diagonal();
+
   return outp;
 }
 

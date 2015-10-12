@@ -66,6 +66,22 @@ TEST(Instantiate,Constructors){
   GaussianProcessRegression<double> g4(3,3);
 }
 
+TEST(OutputSize,MIMO){
+  const size_t input_dim(20), output_dim(10);
+
+  GaussianProcessRegression<float> gpr(input_dim, output_dim);
+  gpr.SetHyperParams(1.1, 1.0, 0.4);
+  Eigen::Matrix<float,input_dim,1> train_input, test_input;
+  train_input.setRandom();
+  test_input.setRandom();
+  Eigen::Matrix<float,output_dim,1> train_output, test_output;
+  train_output.setRandom();
+  test_output.setRandom();
+  gpr.AddTrainingData(train_input,train_output);
+  auto outp = gpr.DoRegression2(test_input);
+  ASSERT_EQ(outp.rows(), output_dim);
+}
+
 
 template<typename R>
 void test_do_regression_siso(R threshold){
@@ -78,7 +94,7 @@ void test_do_regression_siso(R threshold){
     gpr.AddTrainingData(train_inputs[k], train_outputs[k]);
   }
   load_data("siso_test_data.txt",test_inputs,test_outputs,1,1);
-  std::cout<<test_inputs.size()<<endl;
+
   for(size_t k=0; k<test_inputs.size(); k++){
     Vec1 outp = gpr.DoRegression2(test_inputs[k]);
     ASSERT_NEAR(test_outputs[k](0), outp(0),threshold);
@@ -98,7 +114,7 @@ void test_do_regression_miso(R threshold){
     gpr.AddTrainingData(train_inputs[k], train_outputs[k]);
   }
   load_data("miso_test_data.txt",test_inputs,test_outputs,4,1);
-  std::cout<<test_inputs.size()<<endl;
+
   for(size_t k=0; k<test_inputs.size(); k++){
     auto outp = gpr.DoRegression2(test_inputs[k]);
     ASSERT_NEAR(test_outputs[k](0), outp(0),threshold);
@@ -118,7 +134,7 @@ void test_do_regression_mimo(R threshold){
     gpr.AddTrainingData(train_inputs[k], train_outputs[k]);
   }
   load_data("mimo_test_data.txt",test_inputs,test_outputs,4,3);
-  std::cout<<test_inputs.size()<<endl;
+
   for(size_t k=0; k<test_inputs.size(); k++){
     auto outp = gpr.DoRegression2(test_inputs[k]);
     for (size_t l=0; l < outp.rows(); ++l)
@@ -146,22 +162,6 @@ TEST(DoRegression,MIMO){
   test_do_regression_mimo<float>(COMPARISON_THRESHOLD_FLOAT);
 }
 
-TEST(OutputSize,MIMO){
-  const size_t input_dim(20), output_dim(10);
-
-  GaussianProcessRegression<float> gpr(input_dim, output_dim);
-  gpr.SetHyperParams(1.1, 1.0, 0.4);
-  Eigen::Matrix<float,input_dim,1> train_input, test_input;
-  train_input.setRandom();
-  test_input.setRandom();
-  Eigen::Matrix<float,output_dim,1> train_output, test_output;
-  train_output.setRandom();
-  test_output.setRandom();
-  gpr.AddTrainingData(train_input,train_output);
-  auto outp = gpr.DoRegression2(test_input);
-  cout<<outp<<endl<<"test output"<<test_output;
-  ASSERT_EQ(outp.rows(), output_dim);
-}
 
 
 int main(int argc, char *argv[])
