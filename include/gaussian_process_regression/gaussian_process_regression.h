@@ -38,7 +38,7 @@ class GaussianProcessRegression{
   VectorXr regressors;
   
 public:
-  GaussianProcessRegression(){}
+  GaussianProcessRegression(){};
   GaussianProcessRegression(int inputDim, int outputDim);
 
   void SetHyperParams(double l, double f, double n){l_scale_ = l; sigma_f_ = f; sigma_n_ = n;};
@@ -53,6 +53,8 @@ public:
 
   void PrepareRegression(bool force_prepare = false);
   VectorXr DoRegression(const VectorXr & inp,bool prepare = false);
+  VectorXr DoRegression2(const VectorXr & inp,bool prepare = false);
+
   int get_n_data(){return n_data_;};
   void ClearTrainingData();
 };

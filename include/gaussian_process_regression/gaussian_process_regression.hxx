@@ -45,6 +45,41 @@ typename GaussianProcessRegression<R>::VectorXr GaussianProcessRegression<R>::SQ
   return KXx;
 }
 
+template <typename R>
+typename GaussianProcessRegression<R>::VectorXr GaussianProcessRegression<R>::DoRegression2(const VectorXr& inp,bool prepare){
+  VectorXr outp(output_data_.rows());
+  outp.setZero();
+  KXx = SQEcovFunc(input_data_,inp);
+  KxX = SQEcovFunc(input_data_,inp).transpose();
+  VectorXr tmp(input_data_.cols());
+  KXX = SQEcovFunc(input_data_);
+  KXX_ = KXX;
+  // add measurement noise
+  for(int i=0;i<KXX.cols();i++)
+    KXX_(i,i) += sigma_n_*sigma_n_;
+
+  // setup alpha with correct size
+  // rows of output_data_ = dimensions, cols of output_data_ = training samples
+  // later we will take inner product between rows of alpha and rows of output_data_
+  auto alpha = output_data_;
+  alpha *= 0.0;
+  Eigen::FullPivLU<MatrixXr> decomposition(KXX_);
+  for (size_t i=0; i < output_data_.rows(); ++i)
+    {
+      alpha.row(i) = (decomposition.solve(output_data_.row(0).transpose())).transpose();
+      outp(i) = (alpha.row(i)*KXx)(0);
+    }
+  // std::cout<<output_data_.rows()<<" "<<output_data_.cols()<<std::endl;
+  // std::cout<<alpha.rows()<<" "<<alpha.cols()<<std::endl;
+  // std::cout<<KXx.rows()<<" "<<KXx.cols()<<std::endl;
+  // auto temp = alpha*KXx;
+  // //std::cout<<temp.rows()<<" "<<temp.cols()<<std::endl;
+  // outp = temp.diagonal();
+  return outp;
+}
+
+
+
 // This is a slow process that should be replaced by linear solve at some point
 template<typename R>
 void GaussianProcessRegression<R>::PrepareRegression(bool force_prepare)
