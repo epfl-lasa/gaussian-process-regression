@@ -2,8 +2,9 @@
 #define GPR_H
 
 
-# include <eigen3/Eigen/Dense>
-# include <iostream>
+#include <eigen3/Eigen/Dense>
+#include <iostream>
+#include <vector>
 
 //#ifdef USE_DOUBLE_PRECISION
 //typedef double REALTYPE;
@@ -23,8 +24,8 @@ class GaussianProcessRegression{
   MatrixXr output_data_;
   MatrixXr KXX;
   MatrixXr KXX_;
-  MatrixXr KXx;
-  MatrixXr KxX;
+  VectorXr KXx;
+  //MatrixXr KxX;
 
   int n_data_;
   bool b_need_prepare_;
@@ -36,6 +37,9 @@ class GaussianProcessRegression{
   VectorXr dist;
 
   VectorXr regressors;
+
+  //  std::vector<Eigen::FullPivLU<MatrixXr> > decompositions_;
+  MatrixXr alpha_;
   
 public:
   GaussianProcessRegression(){};
@@ -50,10 +54,12 @@ public:
 
   MatrixXr SQEcovFunc(MatrixXr x1);
   VectorXr SQEcovFunc(MatrixXr x1, VectorXr x2);
-
+  // these are fast methods 
   void PrepareRegression(bool force_prepare = false);
   VectorXr DoRegression(const VectorXr & inp,bool prepare = false);
-  VectorXr DoRegression2(const VectorXr & inp,bool prepare = false);
+  // these are the old implementations that are slow, inaccurate and easy to understand
+  void PrepareRegressionOld(bool force_prepare = false);
+  VectorXr DoRegressionOld(const VectorXr & inp,bool prepare = false);
 
   int get_n_data(){return n_data_;};
   void ClearTrainingData();

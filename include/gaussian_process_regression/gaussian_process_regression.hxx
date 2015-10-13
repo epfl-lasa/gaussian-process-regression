@@ -46,40 +46,31 @@ typename GaussianProcessRegression<R>::VectorXr GaussianProcessRegression<R>::SQ
 }
 
 
-// This is the right way to do it but this code should be refactored and tweaked so that the decompositon is not recomputed unless new training data has arrived. 
 template <typename R>
-typename GaussianProcessRegression<R>::VectorXr GaussianProcessRegression<R>::DoRegression2(const VectorXr& inp,bool prepare){
-  VectorXr outp(output_data_.rows());
-  outp.setZero();
-  KXx = SQEcovFunc(input_data_,inp);
-  KxX = SQEcovFunc(input_data_,inp).transpose();
-  VectorXr tmp(input_data_.cols());
+void GaussianProcessRegression<R>::PrepareRegression(bool force_prepare){
+  if(!b_need_prepare_ & !force_prepare)
+    return;
+
   KXX = SQEcovFunc(input_data_);
   KXX_ = KXX;
   // add measurement noise
   for(int i=0;i<KXX.cols();i++)
     KXX_(i,i) += sigma_n_*sigma_n_;
-
-  // setup alpha with correct size
-  // rows of output_data_ = dimensions, cols of output_data_ = training samples
-  // later we will take inner product between rows of alpha and rows of output_data_
-  auto alpha = output_data_;
-  alpha *= 0.0;
-  Eigen::FullPivLU<MatrixXr> decomposition(KXX_);
+  alpha_.resize(output_data_.rows(),output_data_.cols());
+  // pretty slow decomposition to compute
+  //Eigen::FullPivLU<MatrixXr> decomposition(KXX_);
+  // this is much much faster:
+  Eigen::LDLT<MatrixXr> decomposition(KXX_);
   for (size_t i=0; i < output_data_.rows(); ++i)
     {
-      alpha.row(i) = (decomposition.solve(output_data_.row(i).transpose())).transpose();
-      outp(i) = (alpha.row(i)*KXx)(0);
+      alpha_.row(i) = (decomposition.solve(output_data_.row(i).transpose())).transpose();
     }
-
-  return outp;
+  b_need_prepare_ = false;
 }
 
-
-
-// This is a slow process that should be replaced by linear solve at some point
+// This is a slow and and deprecated version that is easier to understand. 
 template<typename R>
-void GaussianProcessRegression<R>::PrepareRegression(bool force_prepare)
+void GaussianProcessRegression<R>::PrepareRegressionOld(bool force_prepare)
 {
   if(!b_need_prepare_ & !force_prepare)
     return;
@@ -95,16 +86,33 @@ void GaussianProcessRegression<R>::PrepareRegression(bool force_prepare)
   b_need_prepare_ = false;
 }
 
-
+// This is the right way to do it but this code should be refactored and tweaked so that the decompositon is not recomputed unless new training data has arrived. 
 template <typename R>
 typename GaussianProcessRegression<R>::VectorXr GaussianProcessRegression<R>::DoRegression(const VectorXr& inp,bool prepare){
+  // if(prepare || b_need_prepare_){
+  //   PrepareRegression();
+  // }
+  PrepareRegression();
+  VectorXr outp(output_data_.rows());
+  outp.setZero();
+  KXx = SQEcovFunc(input_data_,inp);
+  for (size_t i=0; i < output_data_.rows(); ++i)
+    outp(i) = KXx.dot(alpha_.row(i));
+    
+
+  return outp;
+}
+
+
+template <typename R>
+typename GaussianProcessRegression<R>::VectorXr GaussianProcessRegression<R>::DoRegressionOld(const VectorXr& inp,bool prepare){
   if(prepare || b_need_prepare_){
-    PrepareRegression();
+    PrepareRegressionOld();
   }
   VectorXr outp(output_data_.rows());
   outp.setZero();
   KXx = SQEcovFunc(input_data_,inp);
-  KxX = SQEcovFunc(input_data_,inp).transpose();
+  //KxX = SQEcovFunc(input_data_,inp).transpose();
   VectorXr tmp(input_data_.cols());
   // this line is the slow one, hard to speed up further?
   tmp = KXX_*KXx;

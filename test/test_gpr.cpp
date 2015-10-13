@@ -68,7 +68,6 @@ TEST(Instantiate,Constructors){
 
 TEST(OutputSize,MIMO){
   const size_t input_dim(20), output_dim(10);
-
   GaussianProcessRegression<float> gpr(input_dim, output_dim);
   gpr.SetHyperParams(1.1, 1.0, 0.4);
   Eigen::Matrix<float,input_dim,1> train_input, test_input;
@@ -78,7 +77,7 @@ TEST(OutputSize,MIMO){
   train_output.setRandom();
   test_output.setRandom();
   gpr.AddTrainingData(train_input,train_output);
-  auto outp = gpr.DoRegression2(test_input);
+  auto outp = gpr.DoRegression(test_input);
   ASSERT_EQ(outp.rows(), output_dim);
 }
 
@@ -96,7 +95,7 @@ void test_do_regression_siso(R threshold){
   load_data("siso_test_data.txt",test_inputs,test_outputs,1,1);
 
   for(size_t k=0; k<test_inputs.size(); k++){
-    Vec1 outp = gpr.DoRegression2(test_inputs[k]);
+    Vec1 outp = gpr.DoRegression(test_inputs[k]);
     ASSERT_NEAR(test_outputs[k](0), outp(0),threshold);
   }
 }
@@ -116,7 +115,7 @@ void test_do_regression_miso(R threshold){
   load_data("miso_test_data.txt",test_inputs,test_outputs,4,1);
 
   for(size_t k=0; k<test_inputs.size(); k++){
-    auto outp = gpr.DoRegression2(test_inputs[k]);
+    auto outp = gpr.DoRegression(test_inputs[k]);
     ASSERT_NEAR(test_outputs[k](0), outp(0),threshold);
   }
 }
@@ -136,7 +135,7 @@ void test_do_regression_mimo(R threshold){
   load_data("mimo_test_data.txt",test_inputs,test_outputs,4,3);
 
   for(size_t k=0; k<test_inputs.size(); k++){
-    auto outp = gpr.DoRegression2(test_inputs[k]);
+    auto outp = gpr.DoRegression(test_inputs[k]);
     for (size_t l=0; l < outp.rows(); ++l)
       {
 	ASSERT_NEAR(test_outputs[k](l), outp(l), threshold);
@@ -163,6 +162,40 @@ TEST(DoRegression,MIMO){
 }
 
 
+static const size_t input_dim(3), output_dim(3), n_train(1000), n_test(100);
+
+GaussianProcessRegression<float> test_setup_speed_comparison(){
+  GaussianProcessRegression<float> gpr(input_dim, output_dim);
+  gpr.SetHyperParams(1.1, 1.0, 0.4);
+  Eigen::Matrix<float,input_dim,n_train> train_input;
+  train_input.setRandom();
+  Eigen::Matrix<float,output_dim,n_train> train_output;
+  train_output.setRandom();
+  // add training data
+  for (size_t k=0; k<train_input.cols(); ++k){
+    gpr.AddTrainingData(train_input.col(k), train_output.col(k));
+  }
+  return gpr;
+}
+
+TEST(SpeedTest,old_version){
+  auto gpr = test_setup_speed_comparison();
+  Eigen::Matrix<float,input_dim,n_test> test_input;
+  // do regression
+  for (size_t k=0; k < test_input.cols(); ++k){
+    gpr.DoRegressionOld(test_input.col(k));
+  }
+    
+}
+
+TEST(SpeedTest,new_version){
+  auto gpr = test_setup_speed_comparison();
+  Eigen::Matrix<float,input_dim,n_test> test_input;
+  // do regression
+  for (size_t k=0; k < test_input.cols(); ++k){
+    gpr.DoRegression(test_input.col(k));
+  }
+}
 
 int main(int argc, char *argv[])
 {
