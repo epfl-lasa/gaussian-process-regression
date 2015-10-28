@@ -42,7 +42,6 @@ class GaussianProcessRegression{
   MatrixXr alpha_;
   
 public:
-  GaussianProcessRegression(){};
   GaussianProcessRegression(int inputDim, int outputDim);
 
   void SetHyperParams(double l, double f, double n){l_scale_ = l; sigma_f_ = f; sigma_n_ = n;};

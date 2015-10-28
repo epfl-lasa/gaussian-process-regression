@@ -9,6 +9,7 @@ GaussianProcessRegression<R>::GaussianProcessRegression(int inputDim,int outputD
 }
 
 
+
 template<typename R>
 void GaussianProcessRegression<R>::AddTrainingData(VectorXr newInput, VectorXr newOutputs)
 {
