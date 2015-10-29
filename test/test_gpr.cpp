@@ -60,11 +60,148 @@ TEST(FindTestData,SISO_test_data){
 }
 
 TEST(Instantiate,Constructors){
-  GaussianProcessRegression<float> g1;
-  GaussianProcessRegression<double> g2;
   GaussianProcessRegression<float> g3(3,3);
   GaussianProcessRegression<double> g4(3,3);
 }
+
+template <typename R>
+void assert_matrix_equal(const Eigen::Matrix<R,Eigen::Dynamic,Eigen::Dynamic>& m1, const Eigen::Matrix<R,Eigen::Dynamic,Eigen::Dynamic>& m2, double th){
+  ASSERT_EQ(m1.rows(),m2.rows());
+  ASSERT_EQ(m1.cols(),m2.cols());
+  for (size_t row = 0; row < m1.rows(); ++row)
+    {
+      for (size_t col = 0; col < m1.cols(); ++col)
+	{
+	  ASSERT_NEAR(m1(row,col), m2(row,col),th);
+	}
+    }
+}
+
+TEST(AddTrainingData,OneData){
+  const size_t input_dim(20), output_dim(10);
+  GaussianProcessRegression<float> gpr(input_dim, output_dim);
+  gpr.SetHyperParams(1.1, 1.0, 0.4);
+  Eigen::Matrix<float,input_dim,1> test_input;
+  test_input.setRandom();
+  Eigen::Matrix<float,output_dim,1> test_output;
+  test_output.setRandom();
+  gpr.AddTrainingData(test_input, test_output);
+  ASSERT_EQ(1, gpr.get_n_data());
+  assert_matrix_equal<float>(gpr.get_input_data(),test_input,COMPARISON_THRESHOLD_FLOAT);
+  assert_matrix_equal<float>(gpr.get_output_data(),test_output,COMPARISON_THRESHOLD_FLOAT);
+}
+
+TEST(AddTrainingData,OneByObe){
+  const size_t input_dim(20), output_dim(10);
+  GaussianProcessRegression<float> gpr(input_dim, output_dim);
+  gpr.SetHyperParams(1.1, 1.0, 0.4);
+  const size_t nb_data = 128;
+  Eigen::Matrix<float,input_dim,nb_data> test_input;
+  test_input.setRandom();
+  Eigen::Matrix<float,output_dim,nb_data> test_output;
+  test_output.setRandom();
+  for (size_t col=0; col<nb_data; ++col)
+    {
+      gpr.AddTrainingData(test_input.col(col), test_output.col(col));
+    }
+  ASSERT_EQ(nb_data, gpr.get_n_data());
+  assert_matrix_equal<float>(gpr.get_input_data(),test_input,COMPARISON_THRESHOLD_FLOAT);
+  assert_matrix_equal<float>(gpr.get_output_data(),test_output,COMPARISON_THRESHOLD_FLOAT);
+}
+
+TEST(AddTrainingData,BatchAdd){
+  const size_t input_dim(20), output_dim(10);
+  GaussianProcessRegression<float> gpr(input_dim, output_dim);
+  gpr.SetHyperParams(1.1, 1.0, 0.4);
+  const size_t nb_data = 128;
+  Eigen::Matrix<float,input_dim,nb_data> test_input;
+  test_input.setRandom();
+  Eigen::Matrix<float,output_dim,nb_data> test_output;
+  test_output.setRandom();
+  gpr.AddTrainingDataBatch(test_input, test_output);
+  ASSERT_EQ(nb_data, gpr.get_n_data());
+  assert_matrix_equal<float>(gpr.get_input_data(),test_input,COMPARISON_THRESHOLD_FLOAT);
+  assert_matrix_equal<float>(gpr.get_output_data(),test_output,COMPARISON_THRESHOLD_FLOAT);
+}
+
+TEST(AddTrainingData,BatchAdd2){
+  const size_t input_dim(20), output_dim(10);
+  GaussianProcessRegression<float> gpr(input_dim, output_dim);
+  gpr.SetHyperParams(1.1, 1.0, 0.4);
+  const size_t nb_data = 128;
+  Eigen::Matrix<float,input_dim,nb_data> test_input;
+  test_input.setRandom();
+  Eigen::Matrix<float,output_dim,nb_data> test_output;
+  test_output.setRandom();
+  // testing weirdness when using blocks of a matrix for adding training data
+  Eigen::MatrixXf bin = test_input.block(0,0,input_dim,128);
+  Eigen::MatrixXf bout = test_output.block(0,0,output_dim,128);
+  // they need to be cast to Eigen::MatrixXf otherwise there is some memory issue
+  gpr.AddTrainingDataBatch(bin,bout);
+  ASSERT_EQ(128, gpr.get_n_data());
+  assert_matrix_equal<float>(gpr.get_input_data(),test_input,COMPARISON_THRESHOLD_FLOAT);
+  assert_matrix_equal<float>(gpr.get_output_data(),test_output,COMPARISON_THRESHOLD_FLOAT);
+}
+
+
+
+TEST(AddTrainingData,MixedAdd1){
+  const size_t input_dim(2), output_dim(2);
+  GaussianProcessRegression<float> gpr(input_dim, output_dim);
+  gpr.SetHyperParams(1.1, 1.0, 0.4);
+  const size_t nb_data = 5;
+  Eigen::Matrix<float,input_dim,nb_data> test_input;
+  for (size_t k=0; k<nb_data; k++)
+    {
+      test_input.col(k).setConstant(k);
+    }
+  Eigen::Matrix<float,output_dim,nb_data> test_output;
+  test_output.setRandom();
+  // add a few singles
+  size_t nb_single_add = 1;
+  for(size_t col = 0; col<nb_single_add; col++){
+    gpr.AddTrainingData(test_input.col(col), test_output.col(col));
+  }
+  // add some in Batch
+  size_t nb_batch = nb_data - nb_single_add;
+  Eigen::MatrixXf bin = test_input.block(0,nb_single_add,input_dim,nb_batch);
+  Eigen::MatrixXf bout =  test_output.block(0,nb_single_add,output_dim,nb_batch);
+  gpr.AddTrainingDataBatch( bin , bout );
+  ASSERT_EQ(nb_data, gpr.get_n_data());
+  assert_matrix_equal<float>(gpr.get_input_data(),test_input,COMPARISON_THRESHOLD_FLOAT);
+  assert_matrix_equal<float>(gpr.get_output_data(),test_output,COMPARISON_THRESHOLD_FLOAT);
+}
+
+TEST(AddTrainingData,MixedAdd2){
+  const size_t input_dim(20), output_dim(10);
+  GaussianProcessRegression<float> gpr(input_dim, output_dim);
+  gpr.SetHyperParams(1.1, 1.0, 0.4);
+  const size_t nb_data = 128;
+  Eigen::Matrix<float,input_dim,nb_data> test_input;
+  test_input.setRandom();
+  Eigen::Matrix<float,output_dim,nb_data> test_output;
+  test_output.setRandom();
+  // add a few singles
+  size_t nb_single_add = 16;
+  for(size_t col = 0; col<nb_single_add; ++col){
+    gpr.AddTrainingData(test_input.col(col), test_output.col(col));
+  }
+  // add some in Batch
+  size_t nb_batch = 64;
+  Eigen::MatrixXf bin = test_input.block(0,nb_single_add,input_dim,nb_batch);
+  Eigen::MatrixXf bout =  test_output.block(0,nb_single_add,output_dim,nb_batch);
+  gpr.AddTrainingDataBatch( bin , bout );
+  ASSERT_EQ(nb_single_add+nb_batch, gpr.get_n_data());
+  //add some more singles
+  for(size_t col = nb_single_add+nb_batch; col<nb_data; ++col){
+    gpr.AddTrainingData(test_input.col(col), test_output.col(col));
+  }
+  ASSERT_EQ(nb_data, gpr.get_n_data());
+  //ASSERT_TRUE(false);
+  assert_matrix_equal<float>(gpr.get_input_data(),test_input,COMPARISON_THRESHOLD_FLOAT);
+  assert_matrix_equal<float>(gpr.get_output_data(),test_output,COMPARISON_THRESHOLD_FLOAT);
+}
+
 
 TEST(OutputSize,MIMO){
   const size_t input_dim(20), output_dim(10);
@@ -142,6 +279,8 @@ void test_do_regression_mimo(R threshold){
       }
   }
 }
+
+
 
 
 TEST(DoRegression,SISO){

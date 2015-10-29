@@ -45,7 +45,10 @@ public:
   GaussianProcessRegression(int inputDim, int outputDim);
 
   void SetHyperParams(double l, double f, double n){l_scale_ = l; sigma_f_ = f; sigma_n_ = n;};
-  void AddTrainingData(VectorXr newInput, VectorXr newOutputs);
+  // add data one by one
+  void AddTrainingData(const VectorXr& newInput, const VectorXr& newOutput);
+  // batch add data
+  void AddTrainingDataBatch(const MatrixXr& newInput,const MatrixXr& newOutput);
 
   REALTYPE SQEcovFuncD(VectorXr x1,VectorXr x2);
   void Debug();
@@ -61,6 +64,9 @@ public:
   VectorXr DoRegressionOld(const VectorXr & inp,bool prepare = false);
 
   int get_n_data(){return n_data_;};
+  const MatrixXr& get_input_data()  {return input_data_;};
+  const MatrixXr& get_output_data()  {return output_data_;};
+
   void ClearTrainingData();
 };
 

@@ -11,17 +11,49 @@ GaussianProcessRegression<R>::GaussianProcessRegression(int inputDim,int outputD
 
 
 template<typename R>
-void GaussianProcessRegression<R>::AddTrainingData(VectorXr newInput, VectorXr newOutputs)
+void GaussianProcessRegression<R>::AddTrainingData(const VectorXr& newInput,const VectorXr& newOutput)
 {
   n_data_++;
   if(n_data_>=input_data_.cols()){
     input_data_.conservativeResize(input_data_.rows(),n_data_);
     output_data_.conservativeResize(output_data_.rows(),n_data_);
   }
-
-  //cout<<input_data_<<endl<<newInput<<endl;
   input_data_.col(n_data_-1) = newInput;
-  output_data_.col(n_data_-1) = newOutputs;
+  output_data_.col(n_data_-1) = newOutput;
+  b_need_prepare_ = true;
+}
+
+void show_dim(Eigen::MatrixXf a){
+  std::cout<<a.rows()<<" "<<a.cols()<<std::endl;
+}
+
+template<typename R>
+void GaussianProcessRegression<R>::AddTrainingDataBatch(const MatrixXr& newInput, const MatrixXr& newOutput)
+{
+  // sanity check of provided data
+  assert(newInput.cols() == newOutput.cols());
+  // if this is the first data, just add it..
+  if(n_data_ == 0){
+    input_data_ = newInput;
+    output_data_ = newOutput;
+    n_data_ = input_data_.cols();
+  }
+  // if we already have data, first check dimensionaly match
+  else{
+    assert(input_data_.rows() == newInput.rows());
+    assert(output_data_.rows() == newOutput.rows());
+    size_t n_data_old = n_data_;
+    n_data_ += newInput.cols();
+    // resize the matrices
+    if(n_data_ > input_data_.cols()){
+      input_data_.conservativeResize(input_data_.rows(),n_data_);
+      output_data_.conservativeResize(output_data_.rows(),n_data_);
+    }
+    // insert the new data using block operations
+    input_data_.block(0,n_data_old,newInput.rows(),newInput.cols()) = newInput;
+    output_data_.block(0,n_data_old,newOutput.rows(),newOutput.cols()) = newOutput;
+  }
+  // in any case after adding a batch of data we need to recompute decomposition (in lieu of matrix inversion)
   b_need_prepare_ = true;
 }
 
@@ -30,7 +62,6 @@ template<typename R>
 R GaussianProcessRegression<R>::SQEcovFuncD(VectorXr x1, VectorXr x2)
 {
   dist = x1-x2;
-  //cout<<dist<<endl;
   double d = dist.dot(dist);
   d = sigma_f_*sigma_f_*exp(-1/l_scale_/l_scale_/2*d);
   return d;
@@ -127,10 +158,10 @@ typename GaussianProcessRegression<R>::VectorXr GaussianProcessRegression<R>::Do
 template<typename R>
 void GaussianProcessRegression<R>::ClearTrainingData()
 {
-    input_data_.resize(input_data_.rows(),0);
-    output_data_.resize(output_data_.rows(),0);
-    b_need_prepare_ = true;
-    n_data_ = 0;
+  input_data_.resize(input_data_.rows(),0);
+  output_data_.resize(output_data_.rows(),0);
+  b_need_prepare_ = true;
+  n_data_ = 0;
 }
 
 template<typename R>
