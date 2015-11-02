@@ -1,11 +1,13 @@
 #include <boost/python.hpp>
 //#include <string>
 #include "gaussian_process_regression/gaussian_process_regression.h"
-#include <numpy/ndarrayobject.h>
+
 #include <eigen3/Eigen/Dense>
+#include <numpy/ndarrayobject.h> // do not use this
+#include "boost/numpy/ndarray.hpp" // rather prefer this (require Boost.Numpy (boost_numpy via catkin))
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
-using namespace boost::python;
+namespace bp = boost::python;
 
 typedef float real;
 
@@ -23,7 +25,7 @@ Eigen::Matrix<R,rows,cols> numpy_to_eigen(){
 
 // function returning a generic python object
 template <typename R, int rows, int cols>
-object eigen_to_numpy(Eigen::Matrix<R,rows,cols>){
+bp::object eigen_to_numpy(Eigen::Matrix<R,rows,cols>){
   
 };
 
@@ -34,13 +36,16 @@ class NumpyGPR : public GPR{
 public:
   NumpyGPR(int inputDim, int outputDim) : GPR(inputDim,outputDim){};
   // methods that will be part of the python interface and should be overridden:
-  AddTrainingData()
+  // void AddTrainingData(bp::numeric::array new_input, bp::object new_output){
+  //   new_input.getshape();
+  // };
+
 };
 
 BOOST_PYTHON_MODULE(gaussian_process_regression){
   // def("klas",klas_function);
 
-  class_<NumpyGPR>("GaussianProcessRegression",init<int,int>())
+  bp::class_<NumpyGPR>("GaussianProcessRegression",bp::init<int,int>())
     .def("SetHyperParams",&NumpyGPR::SetHyperParams)
     ;
 };
