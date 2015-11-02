@@ -8,6 +8,12 @@ SET(CMAKE_BUILD_TYPE Release)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED)
 
+## for python wrapper
+FIND_PACKAGE(PythonInterp)
+FIND_PACKAGE(PythonLibs)
+FIND_PACKAGE(Boost COMPONENTS python)
+
+
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -30,12 +36,20 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include)
+include_directories(include
+  ${catkin_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${PYTHON_INCLUDE_DIRS}
+  )
 
 ## Declare a cpp library
 # add_library(gaussian_process_regression
 #   src/${PROJECT_NAME}/gaussian_process_regression.cpp
 # )
+
+## PYTHON INTERFACE ##
+PYTHON_ADD_MODULE(gaussian_process_regression src/gpr_python_interface.cpp)
+target_link_libraries(gaussian_process_regression ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 #############
 ## Testing ##
 #############
