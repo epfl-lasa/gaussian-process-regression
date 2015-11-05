@@ -11,12 +11,6 @@ namespace bp = boost::python;
 
 typedef double real;
 
-/*minimal example for testing succesful compilation
-  of python module*/
-// const std::string klas_function(){
-//   return "hello klas!";
-// }
-
 // functions for converting between numpy arrays and Eigen data types
 // this one is tested and working correctly for 1d and 2d ndarrays
 Eigen::Matrix<real,Eigen::Dynamic,Eigen::Dynamic> numpy_to_eigen(const bp::object & in){
@@ -52,20 +46,22 @@ Eigen::Matrix<real,Eigen::Dynamic,Eigen::Dynamic> numpy_to_eigen(const bp::objec
   return out;
 };
 
-// todo: a numpy_to_eigen without copying data
-// could be useful at testing time (need to care about lifetime of underlyng data!)
-
-// function returning a generic python object
+// function returning a python object containing the numpy array. 
 bp::object eigen_to_numpy(const Eigen::Matrix<real,Eigen::Dynamic,Eigen::Dynamic>& in){
-  //npy_intp dims[2] = {1,2};
+  // dimensionality of array:
   npy_intp dims[2] = {static_cast<npy_intp>(in.rows()),static_cast<npy_intp>(in.cols())};
+  // create the raw python array and set its data to point to the data of in
   PyObject * pyObj = PyArray_SimpleNewFromData( 2,dims, NPY_DOUBLE, const_cast<real*>(in.data()) );
+  // get a handle to the created object. Not sure what this does.. something to do with reference counting?
   bp::handle<> handle( pyObj );
+  // interpret the object as a numpy array
   bp::numeric::array arr( handle );
-  // need to copy or else object will be destroyed here
+  // need to return a copy or else object will be destroyed here
   return arr.copy();
 };
 
+// todo: a numpy_to_eigen without copying data
+// could be useful at testing time (need to care about lifetime of underlyng data!)
 
 // a tiny wrapper class for interfacing nicely with numpy
 typedef GaussianProcessRegression<real> GPR;
@@ -76,29 +72,34 @@ public:
   void AddTrainingData(const bp::numeric::array & new_input,const bp::numeric::array & new_output){
     //GPR::AddTrainingData(numpy_to_eigen(new_input),numpy_to_eigen(new_output));
     //numpy_to_eigen(new_input);
+    GPR::AddTrainingData(numpy_to_eigen(new_input), numpy_to_eigen(new_output));
   };
 
-  bp::object simple_test(const bp::numeric::array & in){
-    auto a = numpy_to_eigen(in);
-    std::cout<<a<<std::endl;
-    return eigen_to_numpy(a);
-  };
+  bp::object get_input_data(){
+    return eigen_to_numpy(GPR::get_input_data());
+  }
+
+  bp::object get_output_data(){
+    return eigen_to_numpy(GPR::get_output_data());
+  }
+  
+
+  // just a function to test the eignen <-> numpy interface
+  // bp::object simple_test(const bp::numeric::array & in){
+  //   auto a = numpy_to_eigen(in);
+  //   std::cout<<a<<std::endl;
+  //   return eigen_to_numpy(a);
+  // };
 
 };
-
-void simple_test2(const bp::numeric::array & in){
-    std::cout<<"hello, world"<<std::endl;    
-  };
-
 
 BOOST_PYTHON_MODULE(gaussian_process_regression){
   bp::numeric::array::set_module_and_type("numpy", "ndarray");
   import_array(); // need this otherwise creating arrays will cause segfault
-  //def("klas",klas_function);
-  bp::def("simple_test2",simple_test2);
   bp::class_<NumpyGPR>("GaussianProcessRegression",bp::init<int,int>())
     .def("SetHyperParams",&NumpyGPR::SetHyperParams)
     .def("AddTrainingData",&NumpyGPR::AddTrainingData)
-    .def("simple_test",&NumpyGPR::simple_test)
+    .def("get_input_data",&NumpyGPR::get_input_data)
+    .def("get_output_data",&NumpyGPR::get_output_data)
     ;
 };

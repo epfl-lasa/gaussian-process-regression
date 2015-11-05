@@ -43,7 +43,6 @@ include_directories(include
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${PYTHON_INCLUDE_DIRS}
-  
   )
 
 ## Declare a cpp library
@@ -65,6 +64,6 @@ if(TARGET ${PROJECT_NAME}-test)
 endif()
 
 ## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+catkin_add_nosetests(test/python)
 # export inofrmation for autocompletion tools 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
