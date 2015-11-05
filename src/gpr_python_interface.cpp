@@ -57,33 +57,12 @@ Eigen::Matrix<real,Eigen::Dynamic,Eigen::Dynamic> numpy_to_eigen(const bp::objec
 
 // function returning a generic python object
 bp::object eigen_to_numpy(const Eigen::Matrix<real,Eigen::Dynamic,Eigen::Dynamic>& in){
-  // what is intp? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   //npy_intp dims[2] = {1,2};
-
   npy_intp dims[2] = {static_cast<npy_intp>(in.rows()),static_cast<npy_intp>(in.cols())};
-  std::cout<<"A"<<dims[0]<<dims[1]<<std::endl;
-  // in.data() is a const pointer so we need to resort to const_cast 
-  //  real * data = const_cast<real*>(in.data());
-  real data[dims[0]][dims[1]];
-  for (int row = 0; row < dims[0]; ++row)
-    {
-      for (int col = 0; col < dims[1]; ++col)
-	{
-	  data[row][col] = in(row,col);
-	}
-    }
-  std::cout<<"B"<<data[0][0]<<data[0][1]<<data[0][2]<<std::endl;
-  npy_intp d = 1;
-  /// this is now reduced to a basic example that SHOULD be working.
-  // need to google this further. Problem with som einitialization?
-  auto obj = PyArray_SimpleNew(1, &d, NPY_FLOAT);
-  std::cout<<"C"<<std::endl;
-
-  bp::handle<> handle(obj);
-  bp::numeric::array arr(handle);
-    std::cout<<"Ds"<<std::endl;
-
-  // return a COPY so that lifetime is managed in python
+  PyObject * pyObj = PyArray_SimpleNewFromData( 2,dims, NPY_DOUBLE, const_cast<real*>(in.data()) );
+  bp::handle<> handle( pyObj );
+  bp::numeric::array arr( handle );
+  // need to copy or else object will be destroyed here
   return arr.copy();
 };
 
@@ -114,7 +93,7 @@ void simple_test2(const bp::numeric::array & in){
 
 BOOST_PYTHON_MODULE(gaussian_process_regression){
   bp::numeric::array::set_module_and_type("numpy", "ndarray");
-
+  import_array(); // need this otherwise creating arrays will cause segfault
   //def("klas",klas_function);
   bp::def("simple_test2",simple_test2);
   bp::class_<NumpyGPR>("GaussianProcessRegression",bp::init<int,int>())
