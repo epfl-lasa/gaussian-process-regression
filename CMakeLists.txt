@@ -9,13 +9,15 @@ SET(CMAKE_BUILD_TYPE Release)
 
 ## Boost.Numpy is not yet part of the official boost
 ## I have forked it into a catkin package that is found here
-find_package(catkin REQUIRED COMPONENTS
-  boost_numpy)
+# find_package(catkin REQUIRED COMPONENTS
+#   boost_numpy)
 
 ## for python wrapper
 FIND_PACKAGE(PythonInterp)
-FIND_PACKAGE(PythonLibs)
+FIND_PACKAGE(PythonLibs 2.7 REQUIRED)
 FIND_PACKAGE(Boost COMPONENTS python)
+
+#catkin_python_setup()
 
 ###################################
 ## catkin specific configuration ##
@@ -52,7 +54,11 @@ include_directories(include
 
 ## PYTHON INTERFACE ##
 PYTHON_ADD_MODULE(gaussian_process_regression src/gpr_python_interface.cpp)
-target_link_libraries(gaussian_process_regression ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(gaussian_process_regression ${Boost_LIBRARIES}  ${catkin_LIBRARIES} ${Python_LIBRARIES})
+set_target_properties(gaussian_process_regression PROPERTIES
+        PREFIX ""
+        LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}
+        )
 #############
 ## Testing ##
 #############
@@ -64,6 +70,6 @@ if(TARGET ${PROJECT_NAME}-test)
 endif()
 
 ## Add folders to be run by python nosetests
-catkin_add_nosetests(test/python)
+catkin_add_nosetests(test_python)
 # export inofrmation for autocompletion tools 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
