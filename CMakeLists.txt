@@ -13,7 +13,6 @@ SET(CMAKE_BUILD_TYPE Release)
 #   boost_numpy)
 
 ## for python wrapper
-FIND_PACKAGE(PythonInterp)
 FIND_PACKAGE(PythonLibs 2.7 REQUIRED)
 FIND_PACKAGE(Boost COMPONENTS python)
 
@@ -30,10 +29,10 @@ FIND_PACKAGE(Boost COMPONENTS python)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-#  LIBRARIES gaussian_process_regression
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
-)
+  #  LIBRARIES gaussian_process_regression
+  #  CATKIN_DEPENDS other_catkin_pkg
+  #  DEPENDS system_lib
+  )
 
 ###########
 ## Build ##
@@ -55,10 +54,15 @@ include_directories(include
 ## PYTHON INTERFACE ##
 PYTHON_ADD_MODULE(gaussian_process_regression src/gpr_python_interface.cpp)
 target_link_libraries(gaussian_process_regression ${Boost_LIBRARIES}  ${catkin_LIBRARIES} ${Python_LIBRARIES})
+# put .so file in the correct place for python
 set_target_properties(gaussian_process_regression PROPERTIES
-        PREFIX ""
-        LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}
-        )
+  PREFIX ""
+  LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}
+  )
+# put a __init__.py file in that directory as well so that it becomes a propoer python module
+add_custom_command(TARGET gaussian_process_regression POST_BUILD COMMAND ln -sf ${PROJECT_SOURCE_DIR}/init_for_boost_python ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/__init__.py )
+
+
 #############
 ## Testing ##
 #############
@@ -66,7 +70,7 @@ set_target_properties(gaussian_process_regression PROPERTIES
 ## Add gtest based cpp test target and link libraries
 catkin_add_gtest(${PROJECT_NAME}-test test/test_gpr.cpp WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 if(TARGET ${PROJECT_NAME}-test)
-#  target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+  #  target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 endif()
 
 ## Add folders to be run by python nosetests
