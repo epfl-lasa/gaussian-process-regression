@@ -72,7 +72,13 @@ public:
   void AddTrainingData(const bp::numeric::array & new_input,const bp::numeric::array & new_output){
     //GPR::AddTrainingData(numpy_to_eigen(new_input),numpy_to_eigen(new_output));
     //numpy_to_eigen(new_input);
-    GPR::AddTrainingData(numpy_to_eigen(new_input), numpy_to_eigen(new_output));
+    auto ni = numpy_to_eigen(new_input);
+    auto no = numpy_to_eigen(new_output);
+    if(ni.cols()<1){
+      GPR::AddTrainingData(ni, no); // single add
+    }else{
+      GPR::AddTrainingDataBatch(ni,no); // batch add
+    }
   };
 
   bp::object get_input_data(){
@@ -93,6 +99,14 @@ public:
 
 };
 
+BOOST_PYTHON_MODULE(numpy_eigen){
+  bp::numeric::array::set_module_and_type("numpy", "ndarray");
+  import_array(); // need this otherwise creating arrays will cause segfault
+  bp::def("numpy_to_eigen", &numpy_to_eigen);
+  bp::def("eigen_to_numpy", &eigen_to_numpy);
+};
+
+
 BOOST_PYTHON_MODULE(gaussian_process_regression){
   bp::numeric::array::set_module_and_type("numpy", "ndarray");
   import_array(); // need this otherwise creating arrays will cause segfault
@@ -102,4 +116,6 @@ BOOST_PYTHON_MODULE(gaussian_process_regression){
     .def("get_input_data",&NumpyGPR::get_input_data)
     .def("get_output_data",&NumpyGPR::get_output_data)
     ;
+  bp::to_python_value<Eigen::Matrix<real, Eigen::Dynamic, Eigen::Dynamic> >()
+
 };
