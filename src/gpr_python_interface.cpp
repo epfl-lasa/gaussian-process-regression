@@ -153,9 +153,9 @@ public:
 
 BOOST_PYTHON_MODULE(gaussian_process_regression){
 
-  bp::to_python_converter<
-  MatrixXr,
-  EigenToNumpyConverter>();
+  // bp::to_python_converter<
+  // MatrixXr,
+  // EigenToNumpyConverter>();
 
   bp::numeric::array::set_module_and_type("numpy", "ndarray");
   import_array(); // need this otherwise creating arrays will cause segfault
