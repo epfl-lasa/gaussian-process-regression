@@ -1,6 +1,6 @@
 #include <boost/python.hpp>
 #include <numpy/ndarrayobject.h> // 
-
+#include <eigen3/Eigen/Dense>
 #include <iostream>
 
 namespace bp = boost::python;
@@ -14,19 +14,31 @@ struct dummy_struct{
   double b;
 };
 
+typedef double real;
 struct MyConverter{
-  static PyObject * convert(dummy_struct d){
-    //    double a = 42.0;
-    npy_intp dim = 3;
-    auto p = PyArray_SimpleNew(1,&dim,NPY_FLOAT);
-    DEBUG("IN CONVERTER");
-    return bp::incref(p);
+  static PyObject * convert(const Eigen::MatrixXd& in){
+
+        //    dimensionality of array:
+    DEBUG("I am here");
+    npy_intp dims[2] = {static_cast<npy_intp>(in.rows()),static_cast<npy_intp>(in.cols())};
+    // create the raw python array and set its data to point to the data of in
+    DEBUG("I am here");
+    PyObject * pyObj = PyArray_SimpleNewFromData( 2,dims, NPY_DOUBLE, const_cast<real*>(in.data()) );
+    // get a handle to the created object. Not sure what this does.. something to do with reference counting?
+    DEBUG("I am here");
+    bp::handle<> handle( pyObj );
+    // interpret the object as a numpy array
+    DEBUG("I am here 4");
+    bp::numeric::array arr( handle );
+
+    return bp::incref(arr.ptr());
   }
 };
 
-dummy_struct test_convert(){
-  dummy_struct hej;
-  return hej;
+Eigen::MatrixXd test_convert(){
+  Eigen::MatrixXd test(2,2);
+  test.setIdentity();
+  return test;
 }
 
 BOOST_PYTHON_MODULE(converter_dummy){
@@ -34,7 +46,7 @@ BOOST_PYTHON_MODULE(converter_dummy){
   import_array(); // need this otherwise creating arrays will cause segfault
 
   bp::to_python_converter<
-  dummy_struct,
+    Eigen::MatrixXd,
   MyConverter>();
 
   bp::def("test_convert",&test_convert);
