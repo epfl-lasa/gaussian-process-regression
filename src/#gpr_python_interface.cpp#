@@ -86,7 +86,6 @@ struct EigenToNumpyConverter{
     //return pyObj;
     DEBUG("I am here 6");
     return bp::incref(p);
-     
   }
 };
 // todo: a numpy_to_eigen without copying data

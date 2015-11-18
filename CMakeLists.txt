@@ -53,9 +53,17 @@ include_directories(include
 
 ## PYTHON INTERFACE ##
 PYTHON_ADD_MODULE(gaussian_process_regression src/gpr_python_interface.cpp)
+PYTHON_ADD_MODULE(converter_dummy src/converter_dummy.cpp)
+
 target_link_libraries(gaussian_process_regression ${Boost_LIBRARIES}  ${catkin_LIBRARIES} ${Python_LIBRARIES})
+target_link_libraries(converter_dummy ${Boost_LIBRARIES}  ${catkin_LIBRARIES} ${Python_LIBRARIES})
+
 # put .so file in the correct place for python
 set_target_properties(gaussian_process_regression PROPERTIES
+  PREFIX ""
+  LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}
+  )
+set_target_properties(converter_dummy PROPERTIES
   PREFIX ""
   LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}
   )

@@ -1,0 +1,2 @@
+from gaussian_process_regression import converter_dummy
+print converter_dummy.test_convert()
