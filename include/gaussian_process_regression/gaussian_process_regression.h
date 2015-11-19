@@ -45,6 +45,8 @@ public:
   GaussianProcessRegression(int inputDim, int outputDim);
 
   void SetHyperParams(double l, double f, double n){l_scale_ = l; sigma_f_ = f; sigma_n_ = n;};
+  void GetHyperParams(double & l, double & f, double & n){l = l_scale_; f = sigma_f_; n = sigma_n_;};
+
   // add data one by one
   void AddTrainingData(const VectorXr& newInput, const VectorXr& newOutput);
   // batch add data
