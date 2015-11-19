@@ -53,7 +53,6 @@ public:
   REALTYPE SQEcovFuncD(VectorXr x1,VectorXr x2);
   void Debug();
 
-
   MatrixXr SQEcovFunc(MatrixXr x1);
   VectorXr SQEcovFunc(MatrixXr x1, VectorXr x2);
   // these are fast methods 

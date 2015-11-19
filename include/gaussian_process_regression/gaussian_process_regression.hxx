@@ -1,4 +1,8 @@
-#include "gaussian_process_regression/gaussian_process_regression.h"
+#ifndef GAUSSIAN_PROCESS_REGRESSION_HXX
+#define GAUSSIAN_PROCESS_REGRESSION_HXX
+
+
+//#include "gaussian_process_regression/gaussian_process_regression.h"
 
 template<typename R>
 GaussianProcessRegression<R>::GaussianProcessRegression(int inputDim,int outputDim)
@@ -23,9 +27,9 @@ void GaussianProcessRegression<R>::AddTrainingData(const VectorXr& newInput,cons
   b_need_prepare_ = true;
 }
 
-void show_dim(Eigen::MatrixXf a){
-  std::cout<<a.rows()<<" "<<a.cols()<<std::endl;
-}
+// void show_dim(Eigen::MatrixXf a){
+//   std::cout<<a.rows()<<" "<<a.cols()<<std::endl;
+// }
 
 template<typename R>
 void GaussianProcessRegression<R>::AddTrainingDataBatch(const MatrixXr& newInput, const MatrixXr& newOutput)
@@ -124,8 +128,15 @@ typename GaussianProcessRegression<R>::VectorXr GaussianProcessRegression<R>::Do
   // if(prepare || b_need_prepare_){
   //   PrepareRegression();
   // }
-  PrepareRegression();
+  // can return immediately if no training data has been added..
   VectorXr outp(output_data_.rows());
+  outp.setZero();
+  if(n_data_==0)
+    return outp;
+  
+  PrepareRegression(prepare);
+  //ok
+
   outp.setZero();
   KXx = SQEcovFunc(input_data_,inp);
   for (size_t i=0; i < output_data_.rows(); ++i)
@@ -184,3 +195,4 @@ void GaussianProcessRegression<R>::Debug()
   std::cout<<"output data \n"<<output_data_<<std::endl;
 }
 
+#endif /* GAUSSIAN_PROCESS_REGRESSION_HXX */
