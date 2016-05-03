@@ -32,21 +32,14 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(include)
 
-## Declare a cpp library
-# add_library(gaussian_process_regression
-#   src/${PROJECT_NAME}/gaussian_process_regression.cpp
-# )
 #############
 ## Testing ##
 #############
 
 ## Add gtest based cpp test target and link libraries
-catkin_add_gtest(${PROJECT_NAME}-test test/test_gpr.cpp WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
-if(TARGET ${PROJECT_NAME}-test)
-#  target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+if(CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(${PROJECT_NAME}-test
+    test/test_gpr.cpp
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
+    )
 endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
-# export inofrmation for autocompletion tools 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
