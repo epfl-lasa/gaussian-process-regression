@@ -42,7 +42,6 @@ install(DIRECTORY include/
 if (BUILD_TESTING)
   add_executable(${PROJECT_NAME}_test test/test_gpr.cpp)
   target_link_libraries(${PROJECT_NAME}_test
-          ${PROJECT_NAME}
           ${GTEST_LIBRARIES}
           pthread
           )
