@@ -45,5 +45,6 @@ if (BUILD_TESTING)
           ${GTEST_LIBRARIES}
           pthread
           )
+  target_compile_definitions(${PROJECT_NAME}_test PRIVATE TEST_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/test/")
   add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
 endif ()
