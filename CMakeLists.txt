@@ -1,45 +1,50 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(gaussian_process_regression)
+cmake_minimum_required(VERSION 3.9)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-SET(CMAKE_BUILD_TYPE Release)
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+project(gaussian_process_regression VERSION 0.0.0)
 
-###################################
-## catkin specific configuration ##
-###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if you package contains header files
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-  INCLUDE_DIRS include
-#  LIBRARIES gaussian_process_regression
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
-)
+# Build options
+option(BUILD_TESTING "Build all tests." OFF)
 
-###########
-## Build ##
-###########
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
+# Default to C++17
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+find_package(Eigen3 REQUIRED)
+include_directories(${Eigen3_INCLUDE_DIRS})
+
+if(BUILD_TESTING)
+  enable_testing()
+  find_package(GTest REQUIRED)
+  if (APPLE)
+    add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
+    add_definitions(-D__GLIBCXX__)
+  endif (APPLE)
+else()
+  find_package(GTest QUIET)
+endif()
+
 include_directories(include)
 
-#############
-## Testing ##
-#############
+install(DIRECTORY include/
+  DESTINATION include
+)
 
-## Add gtest based cpp test target and link libraries
-if(CATKIN_ENABLE_TESTING)
-  catkin_add_gtest(${PROJECT_NAME}-test
-    test/test_gpr.cpp
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
-    )
-endif()
+if (BUILD_TESTING)
+  add_executable(${PROJECT_NAME}_test test/test_gpr.cpp)
+  target_link_libraries(${PROJECT_NAME}_test
+          ${GTEST_LIBRARIES}
+          pthread
+          )
+  target_compile_definitions(${PROJECT_NAME}_test PRIVATE TEST_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/test/")
+  add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
+endif ()

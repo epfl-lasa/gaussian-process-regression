@@ -19,7 +19,7 @@ template<typename input_type, typename output_type>
 void load_data(const char *fname, vector<input_type> &inputs, vector<output_type> &outputs, int input_dim, int output_dim) {
   input_type inp,tinp;
   output_type outp,toutp;
-  ifstream myfile(fname);
+  ifstream myfile(std::string(TEST_FIXTURES) + fname);
   ASSERT_TRUE(myfile);
   string line;
   while(getline(myfile,line)){
@@ -36,7 +36,7 @@ void load_data(const char *fname, vector<input_type> &inputs, vector<output_type
 template<typename R>
 void set_hyperparameters_from_file(const char *fname, GaussianProcessRegression<R> & gpr) {
   ifstream myfile;
-  myfile.open(fname);
+  myfile.open(std::string(TEST_FIXTURES) + fname);
   ASSERT_TRUE(myfile);
   R l, f, n;
   myfile>>l>>f>>n;
@@ -45,17 +45,17 @@ void set_hyperparameters_from_file(const char *fname, GaussianProcessRegression<
 }
 
 TEST(FindTestData,HyperParams){
-  ifstream myfile("hyperparams.txt");
+  ifstream myfile(std::string(TEST_FIXTURES) + "hyperparams.txt");
   ASSERT_TRUE(myfile);
 }
 
 TEST(FindTestData,SISO_train_data){
-  ifstream myfile("siso_train_data.txt");
+  ifstream myfile(std::string(TEST_FIXTURES) + "siso_train_data.txt");
   ASSERT_TRUE(myfile);
 }
 
 TEST(FindTestData,SISO_test_data){
-  ifstream myfile("siso_test_data.txt");
+  ifstream myfile(std::string(TEST_FIXTURES) + "siso_test_data.txt");
   ASSERT_TRUE(myfile);
 }
 
