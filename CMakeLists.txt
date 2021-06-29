@@ -42,6 +42,12 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 if (BUILD_TESTING)
   add_executable(${PROJECT_NAME}_test test/test_gpr.cpp)
   target_link_libraries(${PROJECT_NAME}_test
